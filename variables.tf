@@ -33,7 +33,6 @@ variable "custom_ami" {
   default     = ""
 }
 
-
 variable "skip_install" {
   description = "Skip installation step on startup. Useful when using a custom AMI that is already setup"
   type        = bool
