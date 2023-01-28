@@ -21,9 +21,10 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  availability_zones = length(var.allowed_availability_zone_identifier) != 0 ? var.allowed_availability_zone_identifier : [for az in data.aws_availability_zones.available.names : substr(az, -1, 1)]
+  availability_zones           = length(var.allowed_availability_zone_identifier) != 0 ? var.allowed_availability_zone_identifier : [for az in data.aws_availability_zones.available.names : substr(az, -1, 1)]
   availability_zone_identifier = element(local.availability_zones, random_integer.az_id.result)
-  availability_zone = "${var.region}${local.availability_zone_identifier}"
+  availability_zone            = "${var.region}${local.availability_zone_identifier}"
+
   local_ip = jsondecode(data.http.local_ip.response_body).ip
 }
 
