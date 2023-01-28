@@ -35,7 +35,7 @@ resource "random_integer" "az_id" {
 
 resource "random_password" "password" {
   length  = 32
-  special = true
+  special = false
 }
 
 resource "aws_ssm_parameter" "password" {
