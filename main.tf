@@ -26,6 +26,29 @@ locals {
   availability_zone            = "${var.region}${local.availability_zone_identifier}"
 
   local_ip = jsondecode(data.http.local_ip.response_body).ip
+
+  ports = {
+    "rdp" : {
+      "tcp" : [{ "port" = 3389, "description" = "RDP", }, ],
+    },
+    "vnc" : {
+      "tcp" : [{ "port" = 5900, "description" = "VNC", }, ],
+    },
+    "sunshine" : {
+      "tcp" : [
+        { "port" = 47984, "description" = "HTTPS", },
+        { "port" = 47989, "description" = "HTTP", },
+        { "port" = 47990, "description" = "Web", },
+        { "port" = 48010, "description" = "RTSP", },
+      ],
+      "udp" : [
+        { "port" = 47998, "description" = "Video", },
+        { "port" = 47999, "description" = "Control", },
+        { "port" = 48000, "description" = "Audio", },
+        { "port" = 48002, "description" = "Mic (unused)", },
+      ],
+    },
+  }
 }
 
 resource "random_integer" "az_id" {
@@ -56,30 +79,36 @@ resource "aws_security_group" "default" {
   }
 }
 
-# Allow rdp connections from the local ip
-resource "aws_security_group_rule" "rdp_ingress" {
+# Allow inbound connections from the local IP
+resource "aws_security_group_rule" "ingress" {
+  for_each = {
+    for port in flatten(
+      [
+        for app, protocols in local.ports : [
+          for protocol, ports in protocols : [
+            for port in ports : {
+              name        = join("_", [app, protocol, port.port]),
+              app         = app,
+              protocol    = protocol,
+              port        = port.port,
+              description = port.description
+            }
+          ]
+        ]
+      ]
+    ) : join("_", [port.app, port.protocol, port.port]) => port
+  }
   type              = "ingress"
-  description       = "Allow rdp connections (port 3389)"
-  from_port         = 3389
-  to_port           = 3389
-  protocol          = "tcp"
-  cidr_blocks       = ["${local.local_ip}/32"]
-  security_group_id = aws_security_group.default.id
-}
-
-# Allow vnc connections from the local ip
-resource "aws_security_group_rule" "vnc_ingress" {
-  type              = "ingress"
-  description       = "Allow vnc connections (port 5900)"
-  from_port         = 5900
-  to_port           = 5900
-  protocol          = "tcp"
+  description       = each.value.description
+  from_port         = each.value.port
+  to_port           = each.value.port
+  protocol          = each.value.protocol
   cidr_blocks       = ["${local.local_ip}/32"]
   security_group_id = aws_security_group.default.id
 }
 
 # Allow outbound connection to everywhere
-resource "aws_security_group_rule" "default" {
+resource "aws_security_group_rule" "egress" {
   type              = "egress"
   from_port         = 0
   to_port           = 0
