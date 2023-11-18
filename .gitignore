@@ -68,3 +68,4 @@ tags
 
 terraform.tfvars
 *.rdp
+.terraform.lock.hcl
