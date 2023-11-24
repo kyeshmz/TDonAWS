@@ -148,20 +148,13 @@ install-graphic-driver
 choco install steam
 %{ endif }
 
-%{ if var.install_gog_galaxy }
-choco install goggalaxy
-%{ endif }
-
-%{ if var.install_uplay }
-choco install uplay
-%{ endif }
-
-%{ if var.install_origin }
-choco install origin
-%{ endif }
 
 %{ if var.install_epic_games_launcher }
 choco install epicgameslauncher
+%{ endif }
+
+%{ if var.install_anydesk }
+choco install anydesk 
 %{ endif }
 
 </powershell>
